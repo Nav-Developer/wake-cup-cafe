@@ -1,0 +1,323 @@
+"use client";
+
+import { useRef } from "react";
+import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+import cone from "@/assets/Images/leg.png";
+import { chapters } from "@/data/story";
+import PopBackground from "@/components/ui/PopBackground";
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+const STEP = 3;
+
+const SOFT_SHADOW = "shadow-[0_14px_32px_-14px_rgba(122,23,18,0.4)]";
+
+export default function StoryScroll() {
+  const root = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const el = root.current;
+      if (!el) return;
+
+      const total = chapters.length * STEP;
+      const last = chapters.length - 1;
+
+      gsap.set(".chapter", { autoAlpha: 0 });
+
+      const tl = gsap.timeline({
+        defaults: { ease: "power2.out" },
+        scrollTrigger: {
+          trigger: el,
+          start: "top top",
+          end: `+=${chapters.length * 1400}`,
+          scrub: 1,
+          pin: true,
+          anticipatePin: 1,
+        },
+      });
+
+      chapters.forEach((_, i) => {
+        const t = i * STEP;
+        const sel = `.chapter-${i}`;
+
+        tl.to(sel, { autoAlpha: 1, duration: 0.4 }, t).fromTo(
+          `${sel} .reveal`,
+          { y: 60, opacity: 0 },
+          { y: 0, opacity: 1, stagger: 0.12, duration: 0.8 },
+          t,
+        );
+
+        if (el.querySelector(`${sel} .photo`)) {
+          tl.fromTo(
+            `${sel} .photo`,
+            { clipPath: "inset(0 100% 0 0)", scale: 1.15 },
+            { clipPath: "inset(0 0% 0 0)", scale: 1, duration: 1.2 },
+            t,
+          ).fromTo(
+            `${sel} .sticker-wrap`,
+            { scale: 0, rotate: -90 },
+            { scale: 1, rotate: 0, duration: 0.9, ease: "back.out(2)" },
+            t + 0.5,
+          );
+        }
+
+        if (el.querySelector(`${sel} .point`)) {
+          tl.fromTo(
+            `${sel} .point`,
+            { x: 80, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              stagger: 0.25,
+              duration: 0.8,
+              ease: "back.out(1.4)",
+            },
+            t + 0.2,
+          );
+        }
+
+        if (el.querySelector(`${sel} .bignum`)) {
+          tl.fromTo(
+            `${sel} .bignum`,
+            { xPercent: -15, opacity: 0 },
+            { xPercent: 0, opacity: 1, duration: 1 },
+            t,
+          );
+        }
+
+        if (i < last) {
+          tl.to(
+            sel,
+            { autoAlpha: 0, y: -40, duration: 0.5, ease: "power2.in" },
+            t + STEP - 0.6,
+          );
+        }
+      });
+
+      el.querySelectorAll<HTMLElement>(".stat").forEach((s) => {
+        const o = { v: 0 };
+        tl.to(
+          o,
+          {
+            v: Number(s.dataset.value),
+            duration: 1.4,
+            ease: "power1.out",
+            snap: { v: 1 },
+            onUpdate: () => {
+              s.textContent = String(o.v);
+            },
+          },
+          last * STEP + 0.3,
+        );
+      });
+
+      tl.fromTo(
+        ".track-fill",
+        { scaleX: 0 },
+        { scaleX: 1, ease: "none", duration: total },
+        0,
+      );
+      tl.fromTo(
+        ".cone",
+        { left: "0%" },
+        { left: "100%", ease: "none", duration: total },
+        0,
+      );
+      tl.to(".cone", { rotate: 360, ease: "none", duration: total }, 0);
+    },
+    { scope: root },
+  );
+
+  return (
+    <PopBackground ref={root} variant="blush" className="h-screen">
+      {chapters.map((c, i) => {
+        const flip = i % 2 === 1;
+        const tall = c.aspect === "tall";
+        const hasRight = Boolean(c.image || c.points);
+        // tall photos become an arch (café window), wide ones a soft rectangle
+        const radius = tall
+          ? "rounded-t-[999px] rounded-b-[2rem]"
+          : "rounded-[2rem]";
+
+        return (
+          <div
+            key={i}
+            className={`chapter chapter-${i} absolute inset-0 grid items-center gap-10 px-8 pb-28 pt-32 md:grid-cols-2 md:px-20`}
+          >
+            <span
+              aria-hidden
+              className="bignum font-display pointer-events-none absolute top-24 select-none font-semibold italic leading-none text-transparent"
+              style={{
+                fontSize: "18rem",
+                WebkitTextStroke: "2px rgba(200,40,30,0.18)",
+                [flip ? "right" : "left"]: "2rem",
+              }}
+            >
+              {i + 1}
+            </span>
+
+            {/* TEXT */}
+            <div
+              className={`relative z-10 ${flip ? "md:order-2" : ""} ${
+                hasRight ? "" : "md:col-span-2 md:max-w-3xl"
+              }`}
+            >
+              <p className="reveal mb-4 inline-block rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">
+                {c.tag}
+              </p>
+
+              <h2 className="reveal font-display text-4xl font-semibold leading-[1.08] tracking-tight text-ink md:text-6xl">
+                {c.title}
+              </h2>
+
+              <svg
+                aria-hidden
+                className="reveal my-5 w-40 text-brand-red"
+                viewBox="0 0 160 12"
+                fill="none"
+              >
+                <path
+                  d="M2 6 Q 22 -2 42 6 T 82 6 T 122 6 T 158 6"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              <p className="reveal max-w-lg text-base leading-relaxed text-ink/85 md:text-lg">
+                {c.text}
+              </p>
+
+              {c.text2 && (
+                <p className="reveal mt-3 max-w-lg text-sm leading-relaxed text-ink/70 md:text-base">
+                  {c.text2}
+                </p>
+              )}
+
+              {c.stats && (
+                <div className="reveal mt-10 flex flex-wrap gap-5">
+                  {c.stats.map((s) => (
+                    <div
+                      key={s.label}
+                      className={`rounded-3xl bg-white px-6 py-4 ${SOFT_SHADOW}`}
+                    >
+                      <p className="font-display text-5xl font-semibold text-brand-red">
+                        <span className="stat" data-value={s.value}>
+                          0
+                        </span>
+                        {s.suffix}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-ink/70">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* PHOTO */}
+            {c.image && (
+              <div
+                className={`relative z-10 mx-auto w-full ${
+                  tall ? "max-w-sm" : "max-w-2xl"
+                } ${flip ? "md:order-1" : ""}`}
+              >
+                {/* soft offset shape behind the photo */}
+                <div
+                  aria-hidden
+                  className={`absolute inset-0 translate-x-4 translate-y-4 bg-brand-yellow ${radius}`}
+                />
+                <div
+                  className={`photo relative overflow-hidden bg-white ${radius} ${
+                    tall ? "aspect-[4/5]" : "aspect-[4/3]"
+                  }`}
+                >
+                  <Image
+                    src={c.image}
+                    alt={c.title}
+                    fill
+                    sizes={
+                      tall
+                        ? "(min-width:768px) 24rem, 90vw"
+                        : "(min-width:768px) 42rem, 90vw"
+                    }
+                    className="object-cover object-center"
+                  />
+                </div>
+
+                <div
+                  className={`sticker-wrap absolute -top-5 ${
+                    flip ? "-left-5" : "-right-5"
+                  }`}
+                >
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-full bg-brand-red text-2xl text-brand-yellow ring-4 ring-white md:h-20 md:w-20 ${SOFT_SHADOW}`}
+                  >
+                    ✦
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* POINT CARDS */}
+            {c.points && (
+              <div
+                className={`relative z-10 mx-auto flex w-full max-w-xl flex-col gap-4 ${
+                  flip ? "md:order-1" : ""
+                }`}
+              >
+                {c.points.map((p) => (
+                  <div
+                    key={p.title}
+                    className={`point rounded-3xl bg-white px-6 py-4 ${SOFT_SHADOW}`}
+                  >
+                    <span className="inline-block rounded-full bg-brand-red/10 px-3 py-0.5 text-xs font-bold text-brand-red">
+                      {p.label}
+                    </span>
+                    <h3 className="font-display mt-2 text-xl font-semibold leading-tight text-ink md:text-2xl">
+                      {p.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-snug text-ink/75">
+                      {p.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* PROGRESS TRACK */}
+      <div className="absolute inset-x-8 bottom-10 md:inset-x-20">
+        <div className="relative h-2.5 rounded-full bg-white">
+          <div className="track-fill h-full origin-left rounded-full bg-brand-red" />
+
+          {chapters.map((_, i) => (
+            <span
+              key={i}
+              className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-yellow ring-2 ring-white"
+              style={{
+                left: `${(i / Math.max(chapters.length - 1, 1)) * 100}%`,
+              }}
+            />
+          ))}
+
+          <div className="cone absolute top-1/2 w-12 -translate-x-1/2 -translate-y-1/2 md:w-14">
+            <Image
+              src={cone}
+              alt=""
+              sizes="90px"
+              className="h-auto w-full drop-shadow-[0_4px_4px_rgba(74,14,10,0.35)]"
+            />
+          </div>
+        </div>
+      </div>
+    </PopBackground>
+  );
+}

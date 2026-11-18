@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  /* WakeCup logo palette */
+  --brand-red: #c8281e; /* the cup red */
+  --brand-red-dark: #9c1c14;
+  --brand-red-deep: #4a0e0a;
+  --brand-yellow: #f4b83a; /* marigold, from the festive-affair photos */
+  --brand-yellow-shadow: #c78f12;
+  --ink: #2a1410; /* cocoa */
+  --cream: #fffaf2; /* warm paper (name kept so other pages don't break) */
+  --blush: #fbe0d6;
+
+  /* old names kept so other pages don't break */
+  --wine-950: #1f070b;
+  --wine-900: #2e0d12;
+  --wine-800: #4a1820;
+  --wine-700: #6a1d22;
+  --wine-600: var(--brand-red-dark);
+  --gold-400: var(--brand-yellow);
+  --copper: #c98b6b;
+  --cream-200: #f6e9d6;
+}
+
+@theme inline {
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-dark: var(--brand-red-dark);
+  --color-brand-red-deep: var(--brand-red-deep);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-yellow-shadow: var(--brand-yellow-shadow);
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-blush: var(--blush);
+
+  --color-wine-950: var(--wine-950);
+  --color-wine-800: var(--wine-800);
+  --color-wine-600: var(--wine-600);
+  --color-gold-400: var(--gold-400);
+  --color-copper: var(--copper);
+  --color-cream-200: var(--cream-200);
+
+  --font-display: var(--font-bodoni), Georgia, serif;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand-yellow);
+  outline-offset: 3px;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1.5px solid rgba(42, 20, 16, 0.15);
+  padding: 0.875rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+  outline: none;
+}
+.field:focus {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(200, 40, 30, 0.18);
+}
